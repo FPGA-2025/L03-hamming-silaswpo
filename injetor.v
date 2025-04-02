@@ -5,6 +5,6 @@ module injetor(
   output reg [14:0] saida
 );
 
-// implemente seu código aqui
+assign saida = erro ? entrada ^ (15'b000000000000001 << n) : entrada;
 
 endmodule
