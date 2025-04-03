@@ -1,20 +1,38 @@
 module corrige_hamming (
-  input [14:0] entrada, // a paridade é o bit mais significativo (dado[8])
-  output  [10:0] saida
+  input [14:0] entrada,
+  output [10:0] saida
 );
-wire [3:0] erro;
 
-// bits que indicam posição do erro
-assign erro[0] = entrada[0] ^ entrada[2] ^ entrada[4] ^ entrada[6] ^ entrada[8] ^ entrada[10] ^ entrada[12] ^ entrada[14];
-assign erro[1] = entrada[1] ^ entrada[2] ^ entrada[5] ^ entrada[6] ^ entrada[9] ^ entrada[10] ^ entrada[13] ^ entrada[14];
-assign erro[2] = entrada[3] ^ entrada[4] ^ entrada[5] ^ entrada[6] ^ entrada[11] ^ entrada[12] ^ entrada[13] ^ entrada[14];
-assign erro[3] = entrada[7] ^ entrada[8] ^ entrada[9] ^ entrada[10] ^ entrada[11] ^ entrada[12] ^ entrada[13] ^ entrada[14];
+wire [3:0] posicao_erro;
+reg [14:0] saida_temp;
 
-// Corrige o erro invertendo o bit errado (se houver erro)
-wire [14:0] recebido_corrigido = (erro != 0) ? recebido ^ (15'b000000000000001 << (erro - 1)) : recebido;
+// Cálculo da posição do erro (bits de paridade)
+assign posicao_erro[0] = entrada[0] ^ entrada[2] ^ entrada[4] ^ entrada[6] ^ entrada[8] ^ entrada[10] ^ entrada[12] ^ entrada[14];
+assign posicao_erro[1] = entrada[1] ^ entrada[2] ^ entrada[5] ^ entrada[6] ^ entrada[9] ^ entrada[10] ^ entrada[13] ^ entrada[14];
+assign posicao_erro[2] = entrada[3] ^ entrada[4] ^ entrada[5] ^ entrada[6] ^ entrada[11] ^ entrada[12] ^ entrada[13] ^ entrada[14];
+assign posicao_erro[3] = entrada[7] ^ entrada[8] ^ entrada[9] ^ entrada[10] ^ entrada[11] ^ entrada[12] ^ entrada[13] ^ entrada[14];
 
-// extrai os dados corrigidos
-assign saida = {recebido_corrigido[14:12], recebido_corrigido[11:8], recebido_corrigido[6:4], recebido_corrigido[2]};
+// Corrige o dado com base na posição do erro
+always @(*) begin
+  if (posicao_erro != 0)
+    saida_temp = entrada ^ (15'b1 << (posicao_erro - 1));
+  else
+    saida_temp = entrada;
+end
 
+// Extrai os bits de dados
+assign saida = {
+  saida_temp[14], // d11
+  saida_temp[13], // d10
+  saida_temp[12], // d9
+  saida_temp[11], // d8
+  saida_temp[10], // d7
+  saida_temp[9],  // d6
+  saida_temp[8],  // d5
+  saida_temp[6],  // d4
+  saida_temp[5],  // d3
+  saida_temp[4],  // d2
+  saida_temp[2]   // d1
+};
 
 endmodule
